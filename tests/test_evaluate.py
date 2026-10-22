@@ -1,5 +1,7 @@
 """Unit tests for metric functions, threshold optimization, bootstrap CIs, and permutation tests."""
 
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -7,8 +9,10 @@ from src.liverrisk.evaluate import (
     bootstrap_metric_ci,
     compute_calibration_data,
     compute_classification_metrics,
+    compute_decision_curve_analysis,
     evaluate_demographic_subgroups,
     find_screening_threshold,
+    generate_model_evaluation_figures,
     permutation_test_auc,
 )
 
@@ -133,3 +137,28 @@ def test_calibration_data_computation():
     assert "prob_true" in calib
     assert "prob_pred" in calib
     assert len(calib["prob_true"]) > 0
+
+
+def test_compute_decision_curve_analysis():
+    y_true = np.array([0, 0, 0, 1, 1, 1, 1])
+    y_prob = np.array([0.1, 0.2, 0.3, 0.7, 0.8, 0.85, 0.9])
+    dca = compute_decision_curve_analysis(y_true, y_prob)
+
+    assert "thresholds" in dca
+    assert "net_benefit_model" in dca
+    assert "net_benefit_all" in dca
+    assert len(dca["thresholds"]) == len(dca["net_benefit_model"])
+    # Model net benefit should exceed Treat None (0) at typical threshold
+    assert any(nb > 0 for nb in dca["net_benefit_model"])
+
+
+def test_generate_model_evaluation_figures(tmp_path):
+    y_true = np.array([0, 0, 1, 1, 1, 0, 1, 0])
+    y_prob = np.array([0.1, 0.2, 0.8, 0.7, 0.9, 0.3, 0.6, 0.2])
+    out_dir = str(tmp_path / "figures")
+    files = generate_model_evaluation_figures(y_true, y_prob, threshold=0.5, output_dir=out_dir)
+
+    assert len(files) == 4
+    for f in files:
+        assert os.path.exists(f)
+

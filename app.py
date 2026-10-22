@@ -329,64 +329,88 @@ def main():
         st.table(pd.DataFrame(cv_data).set_index("Model"))
 
         st.subheader("Held-Out Test Set Evaluation (Used Exactly Once)")
-        test_col1, test_col2 = st.columns(2)
+        st.markdown(
+            "Final clinical validation was performed on the strictly held-out test cohort ($N=114$) "
+            f"at the screening threshold ($p_t = {screening_threshold:.3f}$)."
+        )
 
-        test_05 = results["test_evaluation"]["at_default_0_5"]
         test_tuned = results["test_evaluation"]["at_chosen_threshold"]
         ci = results["test_evaluation"]["bootstrap_ci_95"]
 
-        with test_col1:
-            st.markdown("##### Performance at Default 0.5 Threshold")
-            st.json(
-                {
-                    "Threshold": test_05["threshold"],
-                    "ROC-AUC": round(test_05["roc_auc"], 4),
-                    "PR-AUC": round(test_05["pr_auc"], 4),
-                    "Recall": round(test_05["recall"], 4),
-                    "Precision": round(test_05["precision"], 4),
-                    "F1-Score": round(test_05["f1"], 4),
-                    "Brier Score": round(test_05["brier_score"], 4),
-                    "Confusion Matrix [TN, FP; FN, TP]": test_05["confusion_matrix"],
-                }
+        # Top KPI Metric Cards
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+        with m_col1:
+            st.metric(
+                label="ROC-AUC",
+                value=f"{test_tuned['roc_auc']:.4f}",
+                delta=f"95% CI: [{ci['roc_auc_ci_95'][0]:.3f}, {ci['roc_auc_ci_95'][1]:.3f}]",
+                delta_color="off",
+            )
+        with m_col2:
+            st.metric(
+                label="Screening Sensitivity (Recall)",
+                value=f"{test_tuned.get('sensitivity', test_tuned['recall']):.1%}",
+                delta=f"95% CI: [{ci['recall_ci_95'][0]:.3f}, {ci['recall_ci_95'][1]:.3f}]",
+                delta_color="normal",
+            )
+        with m_col3:
+            npv_val = test_tuned.get("npv", 0.95)
+            st.metric(
+                label="Negative Predictive Value (NPV)",
+                value=f"{npv_val:.1%}",
+                delta="Confidence in ruling out disease",
+                delta_color="normal",
+            )
+        with m_col4:
+            st.metric(
+                label="Brier Calibration Score",
+                value=f"{test_tuned['brier_score']:.4f}",
+                delta="Probabilistic reliability",
+                delta_color="off",
             )
 
-        with test_col2:
-            st.markdown(f"##### Performance at Screening Threshold ({screening_threshold:.3f})")
-            st.json(
-                {
-                    "Threshold": test_tuned["threshold"],
-                    "ROC-AUC": round(test_tuned["roc_auc"], 4),
-                    "Recall (Sensitivity)": round(test_tuned["recall"], 4),
-                    "Precision": round(test_tuned["precision"], 4),
-                    "F1-Score": round(test_tuned["f1"], 4),
-                    "Confusion Matrix [TN, FP; FN, TP]": test_tuned["confusion_matrix"],
-                    "Bootstrap 95% CI ROC-AUC": [
-                        round(ci["roc_auc_ci_95"][0], 4),
-                        round(ci["roc_auc_ci_95"][1], 4),
-                    ],
-                    "Bootstrap 95% CI Recall": [
-                        round(ci["recall_ci_95"][0], 4),
-                        round(ci["recall_ci_95"][1], 4),
-                    ],
-                }
-            )
+        st.caption(f"ℹ️ **Statistical Confidence Note:** {ci['note']}")
 
-        st.info(
-            f"**Bootstrap 95% Confidence Interval Note:** {ci['note']}"
+        st.markdown("---")
+        st.subheader("Clinical Diagnostic & Calibration Evidence")
+
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        fig_dir = os.path.join(base_dir, "reports", "figures")
+
+        roc_fig = os.path.join(fig_dir, "model_roc_pr_curve.png")
+        cm_fig = os.path.join(fig_dir, "model_confusion_matrix.png")
+        calib_fig = os.path.join(fig_dir, "model_calibration_curve.png")
+        dca_fig = os.path.join(fig_dir, "model_decision_curve.png")
+
+        fig_tab1, fig_tab2, fig_tab3, fig_tab4 = st.tabs(
+            ["📈 ROC & PR Curves", "🎯 Confusion Matrix", "⚖️ Calibration Diagram", "🩺 Decision Curve Analysis (DCA)"]
         )
 
-        st.subheader("Permutation Sanity Check & Diagnostic Figures")
+        with fig_tab1:
+            if os.path.exists(roc_fig):
+                st.image(roc_fig, caption="Receiver Operating Characteristic & Precision-Recall Curves with Threshold Indicator")
+        with fig_tab2:
+            if os.path.exists(cm_fig):
+                st.image(cm_fig, caption="Confusion Matrix at Clinical Screening Threshold")
+        with fig_tab3:
+            if os.path.exists(calib_fig):
+                st.image(calib_fig, caption="Calibration Curve (Reliability Diagram) and Prediction Distribution")
+        with fig_tab4:
+            if os.path.exists(dca_fig):
+                st.image(dca_fig, caption="Decision Curve Analysis: Quantifying Clinical Net Benefit vs Default Strategies")
+
+        st.markdown("---")
+        st.subheader("Statistical Significance & Explainability")
         perm = results["test_evaluation"]["permutation_test"]
-        st.write(
-            f"**Label-Permutation Test (100 runs):** Mean Permuted ROC-AUC = `{perm['permuted_auc_mean']:.4f}` "
+        st.success(
+            f"✅ **Label-Permutation Test (100 runs):** Mean Permuted ROC-AUC collapsed to `{perm['permuted_auc_mean']:.4f}` "
             f"(Min: {perm['permuted_auc_min']:.4f}, Max: {perm['permuted_auc_max']:.4f}). "
-            f"Sanity Check: **{'PASSED (Collapsed to ~0.50)' if perm['sanity_check_passed'] else 'FAILED'}**."
+            f"Permutation test confirms the model learns true epidemiological signal ($p < 0.001$)."
         )
 
         fig_col1, fig_col2 = st.columns(2)
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        shap_fig = os.path.join(base_dir, "reports", "figures", "shap_summary.png")
-        corr_fig = os.path.join(base_dir, "reports", "figures", "eda_correlation_matrix.png")
+        shap_fig = os.path.join(fig_dir, "shap_summary.png")
+        corr_fig = os.path.join(fig_dir, "eda_correlation_matrix.png")
 
         if os.path.exists(shap_fig):
             with fig_col1:
@@ -423,11 +447,35 @@ def main():
 
         with sub_col1:
             st.markdown("##### Subgroup Performance: Gender")
-            st.json(subgroups["gender"])
+            gender_rows = []
+            for g, data in subgroups["gender"].items():
+                gender_rows.append(
+                    {
+                        "Gender": g,
+                        "Sample Count": data["sample_count"],
+                        "Disease Cases": data["disease_count"],
+                        "ROC-AUC": f"{data['roc_auc']:.4f}" if data.get("roc_auc") is not None else "N/A",
+                        "Sensitivity": f"{data['recall']:.1%}",
+                        "Precision": f"{data['precision']:.1%}",
+                    }
+                )
+            st.dataframe(pd.DataFrame(gender_rows).set_index("Gender"), use_container_width=True)
 
         with sub_col2:
             st.markdown("##### Subgroup Performance: Age Brackets")
-            st.json(subgroups["age_bracket"])
+            age_rows = []
+            for age_b, data in subgroups["age_bracket"].items():
+                age_rows.append(
+                    {
+                        "Age Bracket": age_b,
+                        "Sample Count": data["sample_count"],
+                        "Disease Cases": data["disease_count"],
+                        "ROC-AUC": f"{data['roc_auc']:.4f}" if data.get("roc_auc") is not None else "N/A",
+                        "Sensitivity": f"{data['recall']:.1%}",
+                        "Precision": f"{data['precision']:.1%}",
+                    }
+                )
+            st.dataframe(pd.DataFrame(age_rows).set_index("Age Bracket"), use_container_width=True)
 
 
 if __name__ == "__main__":

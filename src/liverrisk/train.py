@@ -19,10 +19,12 @@ from .evaluate import (
     bootstrap_metric_ci,
     compute_calibration_data,
     compute_classification_metrics,
+    compute_decision_curve_analysis,
     compute_out_of_fold_predictions,
     evaluate_cv_models,
     evaluate_demographic_subgroups,
     find_screening_threshold,
+    generate_model_evaluation_figures,
     permutation_test_auc,
 )
 from .explain import compute_permutation_importance, explain_with_shap
@@ -181,8 +183,15 @@ def run_pipeline(
         y_test_arr, test_probs, n_permutations=100, random_state=random_state
     )
 
-    # Calibration data
+    # Calibration data & Decision Curve Analysis (DCA)
     calib_data = compute_calibration_data(y_test_arr, test_probs, n_bins=5)
+    dca_data = compute_decision_curve_analysis(y_test_arr, test_probs)
+
+    # Generate diagnostic figures (ROC/PR curves, Calibration curve, Confusion Matrix, DCA)
+    logger.info("Generating model diagnostic figures (ROC, PR, Calibration, Confusion Matrix, DCA)...")
+    diagnostic_figures = generate_model_evaluation_figures(
+        y_test_arr, test_probs, threshold=chosen_threshold, output_dir=figures_dir
+    )
 
     # 10. Interpretability & Explainability (Permutation Importance + SHAP)
     logger.info("Step 10: Generating explainability assets (SHAP & Permutation Importance)...")
@@ -271,6 +280,8 @@ def run_pipeline(
             "bootstrap_ci_95": bootstrap_results,
             "permutation_test": perm_test,
             "calibration_curve": calib_data,
+            "decision_curve_analysis": dca_data,
+            "diagnostic_figures": [os.path.basename(f) for f in diagnostic_figures],
             "leakage_warning": leakage_warning,
         },
         "interpretability": {

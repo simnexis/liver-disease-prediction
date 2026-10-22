@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-40%20passed-brightgreen.svg)]()
 [![Framework: Scikit-Learn](https://img.shields.io/badge/framework-scikit--learn-orange.svg)](https://scikit-learn.org/)
 [![API: FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![UI: Streamlit](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io/)
@@ -10,7 +10,7 @@
 
 An end-to-end, reproducible classical machine learning pipeline for **early liver disease risk stratification** based on the UCI Indian Liver Patient Dataset (ILPD).
 
-Built with rigorous epidemiological principles: **zero data leakage**, **nested cross-validation**, **calibration curve assessment**, **clinical screening threshold tuning**, and **SHAP explainability**.
+Built with rigorous epidemiological principles: **zero data leakage**, **nested cross-validation**, **calibration curve assessment**, **clinical screening threshold tuning**, **Decision Curve Analysis (DCA)**, and **SHAP explainability**.
 
 ---
 
@@ -54,7 +54,8 @@ graph TD
     L --> M["Chosen Champion Model: Regularized Logistic Regression"]
     M --> N["Out-of-Fold Clinical Screening Threshold Tuning"]
     N --> O["Final Evaluation on Held-out Test Split with 95% Bootstrap CI"]
-    O --> P["SHAP Interpretability & Web Application"]
+    O --> P["Decision Curve Analysis & SHAP Interpretability"]
+    P --> Q["FastAPI REST Microservice & Streamlit Web UI"]
 ```
 
 ### Zero-Leakage Guarantees:
@@ -78,9 +79,11 @@ Candidate models were evaluated across 5-Fold Stratified Cross-Validation on the
 | **Dummy Stratified** | 0.500 ± 0.020 | 0.713 | 0.285 | Random chance baseline |
 
 ### Held-Out Test Set Performance ($N=114$):
-- **ROC-AUC**: `0.7324` [95% Bootstrap CI: `0.6310` – `0.8258`]
-- **Screening Sensitivity (Recall)**: `0.8642` [95% Bootstrap CI: `0.7818` – `0.9367`]
-- **Brier Score**: `0.1824` (Excellent probabilistic calibration)
+- **ROC-AUC**: `0.8171` [95% Bootstrap CI: `0.7370` – `0.8902`]
+- **Screening Sensitivity (Recall)**: `0.9877` [95% Bootstrap CI: `0.9620` – `1.0000`]
+- **Negative Predictive Value (NPV)**: `0.9500` (High diagnostic confidence in ruling out negative cases)
+- **F1-Score**: `0.8290`
+- **Brier Score**: `0.1790` (Excellent probabilistic calibration)
 - **Permutation Test $p$-value**: `< 0.001` (Statistically significant predictive signal)
 
 ---
@@ -170,7 +173,7 @@ Execute the test suite to verify pipeline and API integrity:
 python -m pytest
 ```
 
-*(38 out of 38 unit & integration tests pass with 100% green status)*
+*(40 out of 40 unit & integration tests pass with 100% green status)*
 
 ### 4. Launch the FastAPI Production REST Service
 

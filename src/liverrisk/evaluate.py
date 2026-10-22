@@ -1,7 +1,11 @@
 """Evaluation metrics, cross-validation runners, bootstrapping, calibration, and subgroup analysis."""
 
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
     accuracy_score,
@@ -10,9 +14,11 @@ from sklearn.metrics import (
     brier_score_loss,
     confusion_matrix,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,
+    roc_curve,
 )
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 
@@ -22,7 +28,7 @@ def compute_classification_metrics(
     y_prob: np.ndarray,
     threshold: float = 0.5,
 ) -> dict:
-    """Compute comprehensive classification metrics for given probabilities and decision threshold."""
+    """Compute comprehensive classification and clinical diagnostic metrics for given probabilities and decision threshold."""
     y_true = np.asarray(y_true)
     y_prob = np.asarray(y_prob)
     y_pred = (y_prob >= threshold).astype(int)
@@ -43,6 +49,13 @@ def compute_classification_metrics(
     brier = float(brier_score_loss(y_true, y_prob))
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1]).tolist()
 
+    tn, fp = cm[0][0], cm[0][1]
+    fn, _tp = cm[1][0], cm[1][1]
+    specificity = float(tn / (tn + fp)) if (tn + fp) > 0 else 0.0
+    npv = float(tn / (tn + fn)) if (tn + fn) > 0 else 0.0
+    lr_pos = float(rec / (1 - specificity)) if (1 - specificity) > 0 else 999.0
+    lr_neg = float((1 - rec) / specificity) if specificity > 0 else 999.0
+
     return {
         "threshold": float(threshold),
         "accuracy": acc,
@@ -50,7 +63,13 @@ def compute_classification_metrics(
         "roc_auc": roc_auc,
         "pr_auc": pr_auc,
         "recall": rec,
+        "sensitivity": rec,
+        "specificity": specificity,
         "precision": prec,
+        "ppv": prec,
+        "npv": npv,
+        "lr_positive": round(lr_pos, 4),
+        "lr_negative": round(lr_neg, 4),
         "f1": f1,
         "brier_score": brier,
         "confusion_matrix": cm,
@@ -338,3 +357,163 @@ def compute_calibration_data(
         "prob_true": [float(p) for p in prob_true],
         "prob_pred": [float(p) for p in prob_pred],
     }
+
+
+def compute_decision_curve_analysis(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    thresholds: np.ndarray | None = None,
+) -> dict:
+    """Compute Decision Curve Analysis (DCA) to measure clinical Net Benefit across threshold probabilities.
+
+    Formula (Vickers & Elkin):
+    Net Benefit (Model) = (TP / N) - (FP / N) * (p_t / (1 - p_t))
+    Net Benefit (Treat All) = Prevalence - (1 - Prevalence) * (p_t / (1 - p_t))
+    Net Benefit (Treat None) = 0
+    """
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob)
+    n = len(y_true)
+    prevalence = float(np.mean(y_true))
+
+    if thresholds is None:
+        thresholds = np.linspace(0.10, 0.85, 30)
+
+    net_benefit_model = []
+    net_benefit_all = []
+    threshold_list = []
+
+    for pt in thresholds:
+        weight = pt / (1.0 - pt)
+        y_pred = (y_prob >= pt).astype(int)
+        tp = float(np.sum((y_pred == 1) & (y_true == 1)))
+        fp = float(np.sum((y_pred == 1) & (y_true == 0)))
+
+        nb_model = (tp / n) - (fp / n) * weight
+        nb_all = prevalence - (1.0 - prevalence) * weight
+
+        net_benefit_model.append(float(nb_model))
+        net_benefit_all.append(float(nb_all))
+        threshold_list.append(float(round(pt, 3)))
+
+    return {
+        "thresholds": threshold_list,
+        "net_benefit_model": net_benefit_model,
+        "net_benefit_all": net_benefit_all,
+        "prevalence": prevalence,
+    }
+
+
+def generate_model_evaluation_figures(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    threshold: float,
+    output_dir: str = "reports/figures",
+) -> list[str]:
+    """Generate and save publication-quality diagnostic figures for the trained model."""
+    os.makedirs(output_dir, exist_ok=True)
+    generated_files = []
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob)
+    sns.set_theme(style="whitegrid", palette="muted")
+
+    # 1. ROC & PR Curves
+    fig, (ax_roc, ax_pr) = plt.subplots(1, 2, figsize=(13, 5))
+    fpr, tpr, _ = roc_curve(y_true, y_prob)
+    auc_val = roc_auc_score(y_true, y_prob)
+    ax_roc.plot(fpr, tpr, color="#2980b9", lw=2.5, label=f"ROC (AUC = {auc_val:.3f})")
+    ax_roc.plot([0, 1], [0, 1], color="#7f8c8d", linestyle="--", lw=1.5, label="Chance")
+
+    # Mark screening threshold on ROC
+    y_pred_th = (y_prob >= threshold).astype(int)
+    cm = confusion_matrix(y_true, y_pred_th, labels=[0, 1])
+    tn, fp, fn, tp = cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+    th_fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
+    th_tpr = tp / (tp + fn) if (tp + fn) > 0 else 0
+    ax_roc.scatter([th_fpr], [th_tpr], color="#e74c3c", s=80, zorder=5, label=f"Threshold ({threshold:.2f})")
+
+    ax_roc.set_title("Receiver Operating Characteristic (ROC)", fontsize=13, fontweight="bold")
+    ax_roc.set_xlabel("False Positive Rate (1 - Specificity)")
+    ax_roc.set_ylabel("True Positive Rate (Sensitivity / Recall)")
+    ax_roc.legend(loc="lower right")
+
+    # PR Curve
+    prec, rec, _ = precision_recall_curve(y_true, y_prob)
+    pr_auc_val = average_precision_score(y_true, y_prob)
+    prevalence = float(np.mean(y_true))
+    ax_pr.plot(rec, prec, color="#27ae60", lw=2.5, label=f"PR Curve (AP = {pr_auc_val:.3f})")
+    ax_pr.axhline(y=prevalence, color="#7f8c8d", linestyle="--", lw=1.5, label=f"Prevalence ({prevalence:.2f})")
+    th_prec = tp / (tp + fp) if (tp + fp) > 0 else 0
+    ax_pr.scatter([th_tpr], [th_prec], color="#e74c3c", s=80, zorder=5, label=f"Threshold ({threshold:.2f})")
+
+    ax_pr.set_title("Precision-Recall (PR) Curve", fontsize=13, fontweight="bold")
+    ax_pr.set_xlabel("Recall (Sensitivity)")
+    ax_pr.set_ylabel("Precision (Positive Predictive Value)")
+    ax_pr.legend(loc="lower left")
+
+    plt.tight_layout()
+    roc_pr_path = os.path.join(output_dir, "model_roc_pr_curve.png")
+    fig.savefig(roc_pr_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    generated_files.append(roc_pr_path)
+
+    # 2. Calibration Reliability Diagram
+    fig, (ax_cal, ax_hist) = plt.subplots(2, 1, figsize=(7, 7), gridspec_kw={"height_ratios": [3, 1]})
+    prob_true, prob_pred = calibration_curve(y_true, y_prob, n_bins=5, strategy="uniform")
+    ax_cal.plot(prob_pred, prob_true, "s-", color="#8e44ad", lw=2, label="Model Calibration")
+    ax_cal.plot([0, 1], [0, 1], "--", color="#7f8c8d", label="Perfect Calibration")
+    brier = brier_score_loss(y_true, y_prob)
+    ax_cal.set_title(f"Calibration Reliability Diagram (Brier = {brier:.4f})", fontsize=13, fontweight="bold")
+    ax_cal.set_ylabel("Empirical Fraction of Positives")
+    ax_cal.set_ylim(-0.05, 1.05)
+    ax_cal.legend(loc="upper left")
+
+    ax_hist.hist(y_prob, bins=15, range=(0, 1), color="#9b59b6", edgecolor="white", alpha=0.85)
+    ax_hist.set_xlabel("Predicted Probability of Liver Disease")
+    ax_hist.set_ylabel("Count")
+
+    plt.tight_layout()
+    calib_path = os.path.join(output_dir, "model_calibration_curve.png")
+    fig.savefig(calib_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    generated_files.append(calib_path)
+
+    # 3. Annotated Confusion Matrix
+    fig, ax_cm = plt.subplots(figsize=(6, 5))
+    cm_counts = np.array([[tn, fp], [fn, tp]])
+    cm_labels = np.array([
+        [f"True Negative\n{tn}\n({tn/(tn+fp):.1%})", f"False Positive\n{fp}\n({fp/(tn+fp):.1%})"],
+        [f"False Negative\n{fn}\n({fn/(fn+tp):.1%})", f"True Positive\n{tp}\n({tp/(fn+tp):.1%})"],
+    ])
+    sns.heatmap(cm_counts, annot=cm_labels, fmt="", cmap="Blues", cbar=False, ax=ax_cm, annot_kws={"size": 11})
+    ax_cm.set_title(f"Confusion Matrix @ Threshold = {threshold:.2f}", fontsize=13, fontweight="bold")
+    ax_cm.set_xlabel("Predicted Label (0 = Healthy, 1 = Disease)", fontsize=11)
+    ax_cm.set_ylabel("Actual Ground Truth", fontsize=11)
+
+    plt.tight_layout()
+    cm_path = os.path.join(output_dir, "model_confusion_matrix.png")
+    fig.savefig(cm_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    generated_files.append(cm_path)
+
+    # 4. Decision Curve Analysis (DCA)
+    dca = compute_decision_curve_analysis(y_true, y_prob)
+    fig, ax_dca = plt.subplots(figsize=(7.5, 4.8))
+    ax_dca.plot(dca["thresholds"], dca["net_benefit_model"], color="#e67e22", lw=2.5, label="Liver Risk ML Model")
+    ax_dca.plot(dca["thresholds"], dca["net_benefit_all"], "--", color="#3498db", lw=1.8, label="Screen All Patients")
+    ax_dca.axhline(y=0, color="#7f8c8d", linestyle=":", lw=1.5, label="Screen None")
+
+    ax_dca.set_title("Decision Curve Analysis (Clinical Net Benefit)", fontsize=13, fontweight="bold")
+    ax_dca.set_xlabel("High Risk Threshold Probability (p_t)")
+    ax_dca.set_ylabel("Net Benefit")
+    ax_dca.set_ylim(-0.10, max(dca["net_benefit_model"]) + 0.10)
+    ax_dca.legend(loc="upper right")
+
+    plt.tight_layout()
+    dca_path = os.path.join(output_dir, "model_decision_curve.png")
+    fig.savefig(dca_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    generated_files.append(dca_path)
+
+    return generated_files
+
