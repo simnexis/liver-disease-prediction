@@ -49,6 +49,27 @@ Final clinical evaluation was conducted strictly once on the held-out test parti
 
 ---
 
+## 🤖 Multi-Algorithm Benchmark & Model Selection (Repeated Stratified CV, $N=456$)
+
+To avoid inductive bias and ensure selection of the clinically optimal architecture, 6 classical machine learning algorithms and baseline classifiers were systematically evaluated under **Repeated 5-Fold Stratified Cross-Validation (3 repeats = 15 folds)** strictly on the training partition ($N=456$) inside identical zero-leakage preprocessing pipelines:
+
+| Model Architecture | Validation ROC-AUC | PR-AUC (Precision-Recall) | F1-Score | Architectural Role & Selection Rationale |
+| :--- | :---: | :---: | :---: | :--- |
+| **Logistic Regression (L2-Regularized)** | **0.7313 ± 0.037** | **0.8785** | **0.829** | 🏆 **Selected Champion**: Optimal probabilistic calibration, robust against small-cohort overfitting, direct odds ratio interpretability. |
+| **Support Vector Machine (SVM / RBF)** | 0.7332 ± 0.045 | 0.8831 | 0.819 | Strong discrimination, but uncalibrated margins require secondary Platt scaling and lack direct additive feature attribution. |
+| **Random Forest (100 Trees)** | 0.7196 ± 0.046 | 0.8771 | 0.763 | High variance on tabular samples ($N=456$); susceptible to leaf-level noise memorization. |
+| **K-Nearest Neighbors (KNN)** | 0.7190 ± 0.043 | 0.8702 | 0.801 | Vulnerable to local density variations and continuous enzyme scale distortions in tabular space. |
+| **HistGradientBoosting (GBDT)** | 0.6992 ± 0.050 | 0.8667 | 0.769 | Over-parameterized for $N=456$; demonstrated lower out-of-fold generalization than regularized linear models. |
+| **Decision Tree (CART Baseline)** | 0.6363 ± 0.050 | 0.8014 | 0.655 | Severe variance and high sensitivity to single biomarker split cutoffs. |
+| **Dummy (Most Frequent Baseline)** | 0.5000 ± 0.000 | 0.7127 | 0.832 | Zero clinical discriminative capacity; proves why raw accuracy/F1 is deceptive under class imbalance. |
+
+### 💡 Why Regularized Logistic Regression Outperforms Complex Ensembles
+1. **Calibration Fidelity**: Clinical screening requires true posterior probabilities, not just ranking scores. Logistic regression minimizes log-loss directly, yielding superior Brier calibration ($0.1790$).
+2. **Small-Sample Tabular Robustness**: Tree ensembles (HistGradientBoosting, RF) memorized noise in enzyme outliers. The tuned L2 penalty ($C=0.01$) constrained weights to physiologically consistent bounds.
+3. **Medical Interpretability & SHAP**: Allows deterministic odds ratios and additive log-odds decomposition (via SHAP) essential for clinical adoption.
+
+---
+
 ## 🏗️ System Architecture & Anti-Leakage Protocol
 
 ```mermaid
