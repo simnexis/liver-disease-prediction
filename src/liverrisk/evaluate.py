@@ -10,11 +10,9 @@ from sklearn.metrics import (
     brier_score_loss,
     confusion_matrix,
     f1_score,
-    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,
-    roc_curve,
 )
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 
@@ -177,10 +175,9 @@ def find_screening_threshold(
         )
 
         # Favour models achieving at least target_recall and maximizing F2
-        if rec >= target_recall:
-            if f2 > best_f2:
-                best_f2 = f2
-                best_thresh = float(round(t, 3))
+        if rec >= target_recall and f2 > best_f2:
+            best_f2 = f2
+            best_thresh = float(round(t, 3))
 
     # Fallback if no threshold met target_recall: pick threshold maximizing F2
     if best_f2 < 0:
@@ -291,7 +288,7 @@ def evaluate_demographic_subgroups(
         rec = float(recall_score(sub["y_true"], sub["y_pred"], zero_division=0))
         prec = float(precision_score(sub["y_true"], sub["y_pred"], zero_division=0))
         subgroups["gender"][str(g)] = {
-            "sample_count": int(len(sub)),
+            "sample_count": len(sub),
             "disease_count": int(sub["y_true"].sum()),
             "roc_auc": auc,
             "recall": rec,
@@ -308,7 +305,7 @@ def evaluate_demographic_subgroups(
             rec = float(recall_score(sub["y_true"], sub["y_pred"], zero_division=0))
             prec = float(precision_score(sub["y_true"], sub["y_pred"], zero_division=0))
             subgroups["age_bracket"][str(b)] = {
-                "sample_count": int(len(sub)),
+                "sample_count": len(sub),
                 "disease_count": int(sub["y_true"].sum()),
                 "roc_auc": auc,
                 "recall": rec,
@@ -324,8 +321,8 @@ def evaluate_demographic_subgroups(
     ]
 
     error_analysis = {
-        "false_negative_count": int(len(fn_samples)),
-        "false_positive_count": int(len(fp_samples)),
+        "false_negative_count": len(fn_samples),
+        "false_positive_count": len(fp_samples),
         "subgroups": subgroups,
     }
 

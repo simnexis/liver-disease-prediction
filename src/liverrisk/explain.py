@@ -1,6 +1,7 @@
 """Model interpretability module: Permutation importance and SHAP analysis."""
 
 import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -131,7 +132,7 @@ def explain_with_shap(
 
     local_explanations_meta = []
     for case_name, idx, filename in case_indices:
-        fig, ax = plt.subplots(figsize=(10, 4.5))
+        _fig, ax = plt.subplots(figsize=(10, 4.5))
 
         # Build single-row bar chart for feature contribution
         sample_shap = shap_vals_pos[idx]

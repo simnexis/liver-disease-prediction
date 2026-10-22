@@ -7,6 +7,7 @@ All metrics are loaded directly from results/results.json without hardcoding.
 
 import json
 import os
+
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -301,7 +302,7 @@ def main():
                 st.pyplot(fig)
                 plt.close()
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             st.error(f"Error calculating risk prediction: {e}")
 
     # ---------------- TAB 2: METRICS ----------------

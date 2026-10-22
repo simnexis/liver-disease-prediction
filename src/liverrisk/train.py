@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -63,8 +64,8 @@ def run_pipeline(
     logger.info("Step 4: Splitting data (stratified 80/20)...")
     X_train, X_test, y_train, y_test = split_data(clean_df, test_size=0.2, random_state=random_state)
     split_stats = {
-        "train_rows": int(len(X_train)),
-        "test_rows": int(len(X_test)),
+        "train_rows": len(X_train),
+        "test_rows": len(X_test),
         "train_class_counts": {
             "disease_positive_1": int((y_train == 1).sum()),
             "disease_negative_0": int((y_train == 0).sum()),

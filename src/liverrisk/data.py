@@ -11,6 +11,7 @@ import logging
 import os
 import urllib.request
 import zipfile
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -144,13 +145,13 @@ def load_raw_data(data_dir: str = "data/raw", force_download: bool = False) -> t
                 "acquisition_method": "ucimlrepo",
                 "license": UCI_LICENSE,
                 "citation": UCI_CITATION,
-                "raw_rows": int(len(df)),
+                "raw_rows": len(df),
                 "raw_columns": list(df.columns),
             }
             df.to_csv(raw_csv_path, index=False)
             logger.info("Successfully fetched dataset from ucimlrepo.")
             return df, metadata
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning("ucimlrepo fetch failed: %s. Proceeding to fallback.", e)
 
     # Step B: Direct UCI download
@@ -175,12 +176,12 @@ def load_raw_data(data_dir: str = "data/raw", force_download: bool = False) -> t
                             "acquisition_method": "direct_uci_zip",
                             "license": UCI_LICENSE,
                             "citation": UCI_CITATION,
-                            "raw_rows": int(len(df)),
+                            "raw_rows": len(df),
                             "raw_columns": list(df.columns),
                         }
                         df.to_csv(raw_csv_path, index=False)
                         return df, metadata
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning("Direct UCI download failed: %s", e)
 
     # Step C: Local CSV in data/raw/
@@ -193,11 +194,11 @@ def load_raw_data(data_dir: str = "data/raw", force_download: bool = False) -> t
                 "acquisition_method": "local_raw_cache",
                 "license": UCI_LICENSE,
                 "citation": UCI_CITATION,
-                "raw_rows": int(len(df)),
+                "raw_rows": len(df),
                 "raw_columns": list(df.columns),
             }
             return df, metadata
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning("Failed to load local cached raw CSV: %s", e)
 
     # Step D: Synthetic Fallback
@@ -210,7 +211,7 @@ def load_raw_data(data_dir: str = "data/raw", force_download: bool = False) -> t
         "acquisition_method": "synthetic_generator",
         "license": "Educational synthetic benchmark",
         "citation": "Synthetic data generated with fixed random seed 42 mimicking ILPD distributions",
-        "raw_rows": int(len(df)),
+        "raw_rows": len(df),
         "raw_columns": list(df.columns),
     }
     return df, metadata

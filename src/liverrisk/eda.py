@@ -1,8 +1,8 @@
 """Exploratory Data Analysis (EDA) visualizations and summary statistics."""
 
 import os
+
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -13,7 +13,7 @@ def generate_eda_figures(df: pd.DataFrame, output_dir: str = "reports/figures") 
     sns.set_theme(style="whitegrid", palette="muted")
 
     # 1. Class Balance
-    fig, ax = plt.subplots(figsize=(6, 4))
+    _fig, ax = plt.subplots(figsize=(6, 4))
     counts = df["target"].value_counts()
     labels = ["Liver Disease (1)", "No Liver Disease (0)"]
     bars = ax.bar([labels[0], labels[1]], [counts.get(1, 0), counts.get(0, 0)], color=["#e74c3c", "#3498db"], width=0.5)
@@ -47,7 +47,7 @@ def generate_eda_figures(df: pd.DataFrame, output_dir: str = "reports/figures") 
         ("albumin_globulin_ratio", "A/G Ratio"),
     ]
 
-    fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+    _fig, axes = plt.subplots(2, 3, figsize=(14, 8))
     axes = axes.flatten()
     for i, (col, title) in enumerate(skewed_markers):
         if col in df.columns:
@@ -81,7 +81,7 @@ def generate_eda_figures(df: pd.DataFrame, output_dir: str = "reports/figures") 
     ]
     corr = df[num_cols].corr()
 
-    fig, ax = plt.subplots(figsize=(9, 7))
+    _fig, ax = plt.subplots(figsize=(9, 7))
     sns.heatmap(
         corr,
         annot=True,
@@ -104,7 +104,7 @@ def generate_eda_figures(df: pd.DataFrame, output_dir: str = "reports/figures") 
     plt.close()
 
     # 4. Demographic Breakdown (Gender & Age Imbalance)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5))
+    _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5))
 
     # Gender imbalance
     gender_counts = df["gender"].value_counts()

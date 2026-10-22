@@ -4,7 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.liverrisk.data import clean_and_validate_data, create_synthetic_ilpd, split_data
+from src.liverrisk.data import (
+    clean_and_validate_data,
+    create_synthetic_ilpd,
+    split_data,
+)
 from src.liverrisk.features import build_preprocessor
 
 
@@ -46,7 +50,7 @@ def test_preprocessing_fitted_on_train_only(train_test_data):
 
 
 def test_missing_indicator_generated_for_ag_ratio(train_test_data):
-    X_train, X_test, _, _ = train_test_data
+    X_train, _X_test, _, _ = train_test_data
     preprocessor = build_preprocessor()
 
     preprocessor.fit(X_train)

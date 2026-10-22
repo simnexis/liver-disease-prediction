@@ -79,7 +79,7 @@ def test_duplicates_removed_before_split():
 def test_no_train_test_overlap():
     df = create_synthetic_ilpd(n_rows=100, random_state=42)
     clean_df, _ = clean_and_validate_data(df)
-    X_train, X_test, y_train, y_test = split_data(clean_df, test_size=0.2, random_state=42)
+    X_train, X_test, _y_train, _y_test = split_data(clean_df, test_size=0.2, random_state=42)
 
     # Check index disjointness
     train_indices = set(X_train.index)
@@ -94,7 +94,7 @@ def test_stratified_split_preserves_class_ratio():
     clean_df, _ = clean_and_validate_data(df)
     overall_ratio = clean_df["target"].mean()
 
-    X_train, X_test, y_train, y_test = split_data(clean_df, test_size=0.2, random_state=42)
+    _X_train, _X_test, y_train, y_test = split_data(clean_df, test_size=0.2, random_state=42)
     train_ratio = y_train.mean()
     test_ratio = y_test.mean()
 

@@ -2,9 +2,11 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Tests](https://img.shields.io/badge/tests-30%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen.svg)]()
 [![Framework: Scikit-Learn](https://img.shields.io/badge/framework-scikit--learn-orange.svg)](https://scikit-learn.org/)
+[![API: FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![UI: Streamlit](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io/)
+[![Docker](https://img.shields.io/badge/container-Docker-blue.svg)](https://www.docker.com/)
 
 An end-to-end, reproducible classical machine learning pipeline for **early liver disease risk stratification** based on the UCI Indian Liver Patient Dataset (ILPD).
 
@@ -162,24 +164,42 @@ python run_all.py
 
 ### 3. Run the Unit Test Suite
 
-Execute the test suite to verify pipeline integrity:
+Execute the test suite to verify pipeline and API integrity:
 
 ```bash
 python -m pytest
 ```
 
-*(30 out of 30 unit tests pass in ~5 seconds)*
+*(38 out of 38 unit & integration tests pass with 100% green status)*
 
-### 4. Run Model Predictions
+### 4. Launch the FastAPI Production REST Service
 
-#### Batch Prediction on a CSV file:
+Start the high-throughput REST API with automatic interactive OpenAPI / Swagger documentation:
+
 ```bash
-python predict.py --input data/sample_patients.csv --output data/predictions.csv
+uvicorn api:app --reload --port 8000
 ```
 
-#### Interactive Single-Patient Assessment:
+- **Interactive Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Interactive ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Health Verification**: `curl http://localhost:8000/health`
+
+#### Example Single-Patient Inference (cURL):
 ```bash
-python predict.py --interactive
+curl -X POST "http://localhost:8000/api/v1/predict" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "age": 45,
+       "gender": "Male",
+       "total_bilirubin": 2.4,
+       "direct_bilirubin": 1.1,
+       "alkaline_phosphatase": 230,
+       "alamine_aminotransferase": 68,
+       "aspartate_aminotransferase": 85,
+       "total_proteins": 6.2,
+       "albumin": 3.1,
+       "albumin_globulin_ratio": 1.0
+     }'
 ```
 
 ### 5. Launch the Streamlit Web Application
@@ -195,6 +215,14 @@ The app features:
 - **Preset Clinical Vignettes**: Pre-loaded profiles (Healthy Checkup, Acute Hepatitis, Alcoholic Liver Pattern).
 - **Interactive SHAP Waterfall Explanations**: Instant visual decomposition of biomarker contributions.
 - **Model Benchmark & Metrics Viewer**: Full audit trail of cross-validation results and calibration curves.
+
+### 6. Containerized Deployment via Docker & Docker Compose
+
+Spin up both the FastAPI microservice (`:8000`) and the Streamlit dashboard (`:8501`) simultaneously:
+
+```bash
+docker-compose up --build
+```
 
 ---
 

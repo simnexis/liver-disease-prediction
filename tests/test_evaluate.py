@@ -66,7 +66,7 @@ def test_threshold_selection_fallback_when_unreachable():
     y_prob = np.array([0.1, 0.2, 0.3, 0.4])
 
     # Unreachable target recall 0.99 with high precision requirement
-    best_thresh, curve = find_screening_threshold(y_true, y_prob, target_recall=0.99)
+    best_thresh, _curve = find_screening_threshold(y_true, y_prob, target_recall=0.99)
     assert 0.1 <= best_thresh <= 0.9
 
 

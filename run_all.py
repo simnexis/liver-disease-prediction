@@ -6,6 +6,7 @@ Reproduces all figures, results/results.json, and saved model artifact.
 
 import sys
 import time
+
 from src.liverrisk.train import run_pipeline
 
 
@@ -47,7 +48,7 @@ def main():
         print("  - Figures: reports/figures/")
         print("=" * 70)
         return 0
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"ERROR: Pipeline execution failed: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()

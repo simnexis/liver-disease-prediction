@@ -9,10 +9,10 @@ Supports:
 import argparse
 import json
 import os
-import sys
+
 import joblib
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from src.liverrisk.data import COLUMN_RENAME_MAP, STANDARDIZED_FEATURES
 
@@ -33,7 +33,7 @@ def load_model_and_threshold(base_dir: str = "."):
             with open(results_path, encoding="utf-8") as f:
                 res = json.load(f)
             threshold = res.get("threshold_tuning", {}).get("chosen_threshold", 0.50)
-        except Exception:
+        except Exception:  # noqa: BLE001
             threshold = 0.50
 
     return model, threshold

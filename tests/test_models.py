@@ -1,12 +1,16 @@
 """Unit tests for model definitions, pipelines, serialization roundtrip, and inference checks."""
 
 import tempfile
+
 import joblib
 import numpy as np
-import pandas as pd
 import pytest
 
-from src.liverrisk.data import clean_and_validate_data, create_synthetic_ilpd, split_data
+from src.liverrisk.data import (
+    clean_and_validate_data,
+    create_synthetic_ilpd,
+    split_data,
+)
 from src.liverrisk.models import get_baseline_models, get_candidate_models
 
 
@@ -22,7 +26,7 @@ def test_baseline_dummy_classifiers_initialization():
     assert "Dummy (Most Frequent)" in baselines
     assert "Dummy (Stratified)" in baselines
 
-    for name, pipe in baselines.items():
+    for pipe in baselines.values():
         assert hasattr(pipe, "fit")
         assert "preprocessor" in pipe.named_steps
         assert "classifier" in pipe.named_steps

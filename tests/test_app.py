@@ -1,8 +1,6 @@
 """Unit tests for Streamlit application helper functions."""
 
-import os
 import pandas as pd
-import pytest
 
 from app import explain_single_sample, load_artifacts
 
