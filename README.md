@@ -17,18 +17,16 @@
 * **Interactive REST API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs) *(FastAPI Swagger UI)*
 * **Security & Privacy Policy**: [`SECURITY.md`](SECURITY.md)
 
----
+## ⚡ Executive Summary & System Highlights
 
-## 🎯 Recruiter & Hiring Manager Cheat-Sheet (30-Second Summary)
+> An end-to-end, production-grade clinical machine learning system combining zero-leakage preprocessing, Bayesian-calibrated screening, explainable AI (SHAP), and dual-tier cloud delivery (Streamlit UI + FastAPI REST service).
 
-> **Why this project stands out:** Most entry-level ML portfolios feature single, untested `.ipynb` notebooks with severe data leakage and misleading accuracy metrics. This repository demonstrates **production engineering discipline, epidemiological statistical rigor, and enterprise deployment readiness**.
-
-| Evaluation Dimension | What Was Engineered | Recruiter & Industry Significance |
+| Engineering Dimension | Technical Implementation | Clinical & Production Impact |
 | :--- | :--- | :--- |
-| **Statistical & Clinical Rigor** | **ROC-AUC: 0.8171** `[95% CI: 0.737–0.890]`, **Sensitivity: 98.8%**, **NPV: 95.0%**, **Brier: 0.1790** | Avoided the "accuracy trap" on imbalanced data; proved true epidemiological signal via **100-run Permutation Testing ($p < 0.001$)**. |
-| **Zero Data Leakage** | Purged 13 duplicate patient records *prior* to stratified 80/20 train/test split. Preprocessors encapsulated in `sklearn.pipeline.Pipeline`. | Guarantees test set is strictly unseen; zero optimistic bias in reported metrics. |
-| **Clinical Utility (DCA)** | Implemented **Decision Curve Analysis (DCA)** (Vickers & Elkin, BMJ) measuring **Clinical Net Benefit**. | Demonstrates that the ML model delivers superior patient outcomes over default "Screen All" or "Screen None" strategies. |
-| **Software Architecture** | Modular library under `src/liverrisk/`, **PEP 517/621** `pyproject.toml`, Docker Compose orchestration. | Production-grade software engineering, fully decoupled and packageable. |
+| **Statistical & Clinical Rigor** | **ROC-AUC: 0.8171** `[95% CI: 0.737–0.890]`, **Sensitivity: 98.8%**, **NPV: 95.0%**, **Brier: 0.1790** | Avoids the imbalanced accuracy trap; mathematically proves true biological signal via **100-run Permutation Testing ($p < 0.001$)**. |
+| **Zero Data Leakage** | Purged 13 duplicate patient records *prior* to stratified 80/20 train/test split. Preprocessors encapsulated in `sklearn.pipeline.Pipeline`. | Guarantees test set is strictly unseen; eliminates optimistic bias in reported metrics. |
+| **Clinical Decision Utility** | Implemented **Decision Curve Analysis (DCA)** (Vickers & Elkin, BMJ) measuring **Clinical Net Benefit**. | Demonstrates that the ML model delivers superior patient outcomes over default "Screen All" or "Screen None" strategies. |
+| **Software Architecture** | Modular library under `src/liverrisk/`, **PEP 517/621** `pyproject.toml`, Docker Compose orchestration. | Production-grade software engineering, fully decoupled, reproducible, and packageable. |
 | **Testing & CI/CD** | **40 automated tests (`pytest`)** covering data hygiene, edge cases, and API endpoints + **GitHub Actions CI**. | 100% green test pass rate; zero lint errors via **Ruff (`ruff check .`)**. |
 | **Explainable AI (XAI)** | **SHAP (Shapley Additive Explanations)** global rankings + real-time local patient waterfall charts. | Converts "black box" machine learning into clinically actionable, auditable biomarker attributions. |
 | **Production Deliverables** | **Streamlit Community Cloud** (Live) + **FastAPI REST Service** (with OpenAPI/Swagger UI) + **Docker Compose**. | Dual product delivery ready for clinician use and enterprise backend microservice integration. |
