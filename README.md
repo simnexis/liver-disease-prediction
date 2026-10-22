@@ -5,8 +5,11 @@
 [![Tests](https://img.shields.io/badge/tests-40%20passed-brightgreen.svg)]()
 [![Framework: Scikit-Learn](https://img.shields.io/badge/framework-scikit--learn-orange.svg)](https://scikit-learn.org/)
 [![API: FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![UI: Streamlit](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://8gt6vets6xrcmhjpzgkspk.streamlit.app/)
 [![Docker](https://img.shields.io/badge/container-Docker-blue.svg)](https://www.docker.com/)
+
+[🔴 **LIVE WEB DEMO**: https://8gt6vets6xrcmhjpzgkspk.streamlit.app/](https://8gt6vets6xrcmhjpzgkspk.streamlit.app/)
+
 
 An end-to-end, reproducible classical machine learning pipeline for **early liver disease risk stratification** based on the UCI Indian Liver Patient Dataset (ILPD).
 
