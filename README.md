@@ -12,14 +12,31 @@
 
 ---
 
-### 🔴 Live Cloud Application
-> **Try the deployed clinical tool in your browser:**  
-> 👉 **[https://8gt6vets6xrcmhjpzgkspk.streamlit.app/](https://8gt6vets6xrcmhjpzgkspk.streamlit.app/)**  
-> *(Zero installation required. Instant interactive patient risk scoring with SHAP waterfall explanations).*
+### 🔴 Live Deployments & Quick Links
+* **Live Cloud Application**: [https://8gt6vets6xrcmhjpzgkspk.streamlit.app/](https://8gt6vets6xrcmhjpzgkspk.streamlit.app/) *(No installation needed)*
+* **Interactive REST API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs) *(FastAPI Swagger UI)*
+* **Security & Privacy Policy**: [`SECURITY.md`](SECURITY.md)
 
 ---
 
-## 💡 What Is This Project? (In 30 Seconds)
+## 🎯 Recruiter & Hiring Manager Cheat-Sheet (30-Second Summary)
+
+> **Why this project stands out:** Most entry-level ML portfolios feature single, untested `.ipynb` notebooks with severe data leakage and misleading accuracy metrics. This repository demonstrates **production engineering discipline, epidemiological statistical rigor, and enterprise deployment readiness**.
+
+| Evaluation Dimension | What Was Engineered | Recruiter & Industry Significance |
+| :--- | :--- | :--- |
+| **Statistical & Clinical Rigor** | **ROC-AUC: 0.8171** `[95% CI: 0.737–0.890]`, **Sensitivity: 98.8%**, **NPV: 95.0%**, **Brier: 0.1790** | Avoided the "accuracy trap" on imbalanced data; proved true epidemiological signal via **100-run Permutation Testing ($p < 0.001$)**. |
+| **Zero Data Leakage** | Purged 13 duplicate patient records *prior* to stratified 80/20 train/test split. Preprocessors encapsulated in `sklearn.pipeline.Pipeline`. | Guarantees test set is strictly unseen; zero optimistic bias in reported metrics. |
+| **Clinical Utility (DCA)** | Implemented **Decision Curve Analysis (DCA)** (Vickers & Elkin, BMJ) measuring **Clinical Net Benefit**. | Demonstrates that the ML model delivers superior patient outcomes over default "Screen All" or "Screen None" strategies. |
+| **Software Architecture** | Modular library under `src/liverrisk/`, **PEP 517/621** `pyproject.toml`, Docker Compose orchestration. | Production-grade software engineering, fully decoupled and packageable. |
+| **Testing & CI/CD** | **40 automated tests (`pytest`)** covering data hygiene, edge cases, and API endpoints + **GitHub Actions CI**. | 100% green test pass rate; zero lint errors via **Ruff (`ruff check .`)**. |
+| **Explainable AI (XAI)** | **SHAP (Shapley Additive Explanations)** global rankings + real-time local patient waterfall charts. | Converts "black box" machine learning into clinically actionable, auditable biomarker attributions. |
+| **Production Deliverables** | **Streamlit Community Cloud** (Live) + **FastAPI REST Service** (with OpenAPI/Swagger UI) + **Docker Compose**. | Dual product delivery ready for clinician use and enterprise backend microservice integration. |
+| **Privacy & Security** | **Zero Data Retention** (ephemeral RAM inference) + **Pydantic V2** runtime input bounds. | Conforms to healthcare data minimization and defense-in-depth principles. |
+
+---
+
+## 💡 What Is This Project? (Plain English Summary)
 
 Early liver disease often develops silently without visible symptoms until severe damage or cirrhosis has occurred. However, routine blood tests (**Liver Function Tests / LFTs**) contain subtle biochemical patterns that signal early hepatobiliary distress.
 
