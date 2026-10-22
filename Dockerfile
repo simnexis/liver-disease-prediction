@@ -27,7 +27,8 @@ COPY models/ /app/models/
 COPY results/ /app/results/
 COPY reports/ /app/reports/
 COPY data/ /app/data/
-COPY api.py app.py predict.py ./
+COPY .streamlit/ /app/.streamlit/
+COPY api.py app.py predict.py pyproject.toml ./
 
 # Expose Streamlit (8501) and FastAPI (8000)
 EXPOSE 8501 8000
